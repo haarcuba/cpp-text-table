@@ -25,6 +25,11 @@ main()
     t.add( "3001" );
     t.endOfRow();
 
+    t.add( "Bob" );
+    t.add( "male" );
+    t.add( "25" );
+    t.endOfRow();
+
     t.setAlignment( 2, TextTable::Alignment::RIGHT );
     std::cout << t;
     return 0;
