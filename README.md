@@ -1,4 +1,4 @@
-# Text Table
+# C++ Text Table
 Format text in tabular form: example:
 
 ```C++
