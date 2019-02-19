@@ -4,6 +4,16 @@
 #include <vector>
 #include <string>
 
+const std::string blue("\033[0;34m");
+const std::string red("\033[0;31m");
+const std::string green("\033[1;32m");
+const std::string yellow("\033[1;33m");
+const std::string cyan("\033[0;36m");
+const std::string magenta("\033[0;35m");
+const std::string reset("\033[0m");
+
+
+    
 class TextTable {
 
     public:
@@ -29,15 +39,18 @@ class TextTable {
     char horizontal() const
     { return _horizontal; }
 
-    void add( std::string const & content )
+    void add( std::string const & content ,string color = reset)
     {
         _current.push_back( content );
+        _current_color.push_back( color );
     }
 
     void endOfRow()
     {
         _rows.push_back( _current );
         _current.assign( 0, "" );
+        _rows_color.push_back(_current_color);
+        _current_color.assign(0, "");
     }
 
     template <typename Iterator>
@@ -58,6 +71,11 @@ class TextTable {
     std::vector< Row > const & rows() const
     {
         return _rows;
+    }
+    
+    std::vector< Row > const & rows_color() const
+    {
+        return _rows_color;
     }
 
     void setup() const
@@ -86,7 +104,11 @@ class TextTable {
     char _vertical;
     char _corner;
     Row _current;
+    Row _current_color;
+
     std::vector< Row > _rows;
+    std::vector< Row > _rows_color;
+
     std::vector< unsigned > mutable _width;
     std::map< unsigned, Alignment > mutable _alignment;
 
@@ -129,12 +151,15 @@ std::ostream & operator<<( std::ostream & stream, TextTable const & table )
 {
     table.setup();
     stream << table.ruler() << "\n";
-    for ( auto rowIterator = table.rows().begin(); rowIterator != table.rows().end(); ++ rowIterator ) {
-        TextTable::Row const & row = * rowIterator;
+    for ( auto rowIterator = table.rows().begin(), row_colorIterator = 
+            table.rows_color().begin(); rowIterator != table.rows().end(); 
+            ++ rowIterator, ++row_colorIterator) {
+        TextTable::Row const & row = * rowIterator; 
+        TextTable::Row const & row_color = * row_colorIterator; 
         stream << table.vertical();
         for ( unsigned i = 0; i < row.size(); ++i ) {
             auto alignment = table.alignment( i ) == TextTable::Alignment::LEFT ? std::left : std::right;
-            stream << std::setw( table.width( i ) ) << alignment << row[ i ];
+            stream << row_color[i] << std::setw( table.width( i ) ) << alignment  << row[ i ] << reset;
             stream << table.vertical();
         }
         stream << "\n";
@@ -142,4 +167,4 @@ std::ostream & operator<<( std::ostream & stream, TextTable const & table )
     }
 
     return stream;
-}
+}   
