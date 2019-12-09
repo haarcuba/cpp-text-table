@@ -1,7 +1,7 @@
 #include <iostream>
 #include "TextTable.h"
 
-main()
+int main()
 {
     TextTable t( '-', '|', '+' );
 
