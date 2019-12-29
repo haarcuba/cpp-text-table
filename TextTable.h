@@ -127,7 +127,7 @@ class TextTable {
     }
 };
 
-std::ostream & operator<<( std::ostream & stream, TextTable const & table )
+inline std::ostream & operator<<( std::ostream & stream, TextTable const & table )
 {
     table.setup();
     stream << table.ruler() << "\n";
