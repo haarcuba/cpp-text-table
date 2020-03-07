@@ -11,10 +11,25 @@ class TextTable {
     public:
     enum class Alignment { LEFT, RIGHT }; 
     typedef std::vector< std::string > Row;
-    TextTable( char horizontal = '-', char vertical = '|', char corner = '+' ) :
+    TextTable() :
+        _horizontal( '-' ),
+        _vertical( '|' ),
+        _corner( '+' ),
+		_has_ruler(true)
+    {}
+
+    TextTable( char horizontal, char vertical, char corner ) :
         _horizontal( horizontal ),
         _vertical( vertical ),
-        _corner( corner )
+        _corner( corner ),
+		_has_ruler(true)
+    {}
+    
+    explicit TextTable( char vertical ) :
+        _horizontal( '\0' ),
+        _vertical( vertical ),
+        _corner( '\0' ),
+		_has_ruler( false )
     {}
 
     void setAlignment( unsigned i, Alignment alignment )
@@ -83,10 +98,13 @@ class TextTable {
     int width( unsigned i ) const
     { return _width[ i ]; }
 
+	bool has_ruler() const { return _has_ruler;}
+
     private:
-    char _horizontal;
-    char _vertical;
-    char _corner;
+    const char _horizontal;
+    const char _vertical;
+    const char _corner;
+    const bool _has_ruler;
     Row _current;
     std::vector< Row > _rows;
     std::vector< unsigned > mutable _width;
@@ -130,7 +148,9 @@ class TextTable {
 inline std::ostream & operator<<( std::ostream & stream, TextTable const & table )
 {
     table.setup();
-    stream << table.ruler() << "\n";
+	if (table.has_ruler()) {
+	    stream << table.ruler() << "\n";
+	}
     for ( auto rowIterator = table.rows().begin(); rowIterator != table.rows().end(); ++ rowIterator ) {
         TextTable::Row const & row = * rowIterator;
         stream << table.vertical();
@@ -140,7 +160,9 @@ inline std::ostream & operator<<( std::ostream & stream, TextTable const & table
             stream << table.vertical();
         }
         stream << "\n";
-        stream << table.ruler() << "\n";
+		if (table.has_ruler()) {
+        	stream << table.ruler() << "\n";
+		}
     }
 
     return stream;
