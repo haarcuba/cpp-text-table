@@ -6,6 +6,13 @@
 #include <vector>
 #include <string>
 
+#ifdef TEXTTABLE_ENCODE_MULTIBYTE_STRINGS
+#include <clocale>
+#ifndef TEXTTABLE_USE_EN_US_UTF8
+#define TEXTTABLE_USE_EN_US_UTF8
+#endif
+#endif
+
 class TextTable {
 
     public:
@@ -100,6 +107,11 @@ class TextTable {
 
 	bool has_ruler() const { return _has_ruler;}
 
+	int correctDistance(std::string string_to_correct) const
+		{
+			return static_cast<int>(string_to_correct.size()) - static_cast<int>(glyphLength(string_to_correct));
+		};
+	
     private:
     const char _horizontal;
     const char _vertical;
@@ -108,8 +120,9 @@ class TextTable {
     Row _current;
     std::vector< Row > _rows;
     std::vector< unsigned > mutable _width;
+	std::vector< unsigned > mutable _utf8width;
     std::map< unsigned, Alignment > mutable _alignment;
-
+	
     static std::string repeat( unsigned times, char c )
     {
         std::string result;
@@ -124,13 +137,37 @@ class TextTable {
         return _rows[ 0 ].size();
     }
 
+	unsigned glyphLength( std::string s ) const
+	{
+		unsigned int _byteLength = s.length();
+#ifdef TEXTTABLE_ENCODE_MULTIBYTE_STRINGS
+#ifdef TEXTTABLE_USE_EN_US_UTF8
+		std::setlocale(LC_ALL, "en_US.utf8");
+#else
+#error You need to specify the encoding if the TextTable library uses multybyte string encoding!
+#endif
+		unsigned int u = 0;
+		const char *c_str = s.c_str();
+		unsigned _glyphLength = 0;
+		while(u < _byteLength)
+		{
+			u += std::mblen(&c_str[u], _byteLength - u);
+			_glyphLength += 1;
+		}
+		return _glyphLength;
+#else
+		return _byteLength;
+#endif
+	}
+	
     void determineWidths() const
     {
         _width.assign( columns(), 0 );
+		_utf8width.assign( columns(), 0 );
         for ( auto rowIterator = _rows.begin(); rowIterator != _rows.end(); ++ rowIterator ) {
             Row const & row = * rowIterator;
             for ( unsigned i = 0; i < row.size(); ++i ) {
-                _width[ i ] = _width[ i ] > row[ i ].size() ? _width[ i ] : row[ i ].size();
+                _width[ i ] = _width[ i ] > glyphLength(row[ i ]) ? _width[ i ] : glyphLength(row[ i ]);
             }
         }
     }
@@ -156,7 +193,11 @@ inline std::ostream & operator<<( std::ostream & stream, TextTable const & table
         stream << table.vertical();
         for ( unsigned i = 0; i < row.size(); ++i ) {
             auto alignment = table.alignment( i ) == TextTable::Alignment::LEFT ? std::left : std::right;
-            stream << std::setw( table.width( i ) ) << alignment << row[ i ];
+			// std::setw( width ) works as follows: a string which goes in the stream with byte length (!) l is filled with n spaces so that l+n=width.
+			// For a utf8 encoded string the glyph length g might be smaller than l. We need n spaces so that g+n=width which is equivalent to g+n+l-l=width ==> l+n = width+l-g
+			// l-g (that means glyph length minus byte length) has to be added to the width argument.
+			// l-g is computed by correctDistance.
+            stream << std::setw( table.width( i ) + table.correctDistance(row[ i ])) << alignment << row[ i ];
             stream << table.vertical();
         }
         stream << "\n";
