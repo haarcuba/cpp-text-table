@@ -1,4 +1,8 @@
 #include <iostream>
+
+#define TEXTTABLE_ENCODE_MULTIBYTE_STRINGS
+#define TEXTTABLE_USE_EN_US_UTF8
+
 #include "TextTable.h"
 
 int main()
@@ -25,7 +29,7 @@ int main()
     t.add( "3001" );
     t.endOfRow();
 
-    t.add( "Bob" );
+    t.add( "Bob Çuçşü" );
     t.add( "male" );
     t.add( "25" );
     t.endOfRow();
