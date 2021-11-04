@@ -38,7 +38,7 @@ public:
 
   char horizontal() const { return _horizontal; }
 
-  void add(std::string const &content) { _current.push_back(content); }
+  void add(const std::string& content) { _current.push_back(content); }
 
   void endOfRow() {
     _rows.push_back(_current);
@@ -52,11 +52,11 @@ public:
     endOfRow();
   }
 
-  template <typename Container> void addRow(Container const &container) {
+  template <typename Container> void addRow(const Container& container) {
     addRow(container.begin(), container.end());
   }
 
-  std::vector<Row> const &rows() const { return _rows; }
+  const std::vector<Row>& rows() const { return _rows; }
 
   void setup() const {
     determineWidths();
@@ -78,7 +78,7 @@ public:
 
   bool has_ruler() const { return _has_ruler; }
 
-  int correctDistance(std::string string_to_correct) const {
+  int correctDistance(const std::string& string_to_correct) const {
     return static_cast<int>(string_to_correct.size()) -
            static_cast<int>(glyphLength(string_to_correct));
   };
@@ -104,7 +104,7 @@ private:
 
   unsigned columns() const { return _rows[0].size(); }
 
-  unsigned glyphLength(std::string s) const {
+  unsigned glyphLength(const std::string& s) const {
     unsigned int _byteLength = s.length();
 #ifdef TEXTTABLE_ENCODE_MULTIBYTE_STRINGS
 #ifdef TEXTTABLE_USE_EN_US_UTF8
@@ -153,7 +153,10 @@ private:
   }
 };
 
-inline std::ostream &operator<<(std::ostream &stream, TextTable const &table) {
+inline std::ostream &operator<<(std::ostream &stream, const TextTable& table) {
+  if (table.rows().empty()) {
+    return stream;
+  }
   table.setup();
   if (table.has_ruler()) {
     stream << table.ruler() << "\n";
